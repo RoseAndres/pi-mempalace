@@ -1,0 +1,30 @@
+{
+  "name": "pi-mempalace",
+  "version": "0.1.0",
+  "description": "MemPalace memory palace integration for pi coding agent — automatic diary writes, session mining, and 29 MCP tools registered natively",
+  "keywords": ["pi-package", "mempalace", "memory", "mcp"],
+  "license": "MIT",
+  "author": "RoseAndres",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RoseAndres/pi-mempalace.git"
+  },
+  "homepage": "https://github.com/RoseAndres/pi-mempalace#readme",
+  "bugs": {
+    "url": "https://github.com/RoseAndres/pi-mempalace/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "type": "module",
+  "pi": {
+    "extensions": ["./src/mempalace.ts"]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "typebox": "^1.1.31"
+  }
+}
