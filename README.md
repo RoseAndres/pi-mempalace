@@ -97,6 +97,7 @@ export PI_MEMPALACE_TOOL_TIMEOUT=180000
 | `/mine-sessions --since 2026-01-01` | Only sessions modified on or after a date |
 | `/mine-sessions --wing myproject` | Override inferred wing name for all sessions |
 | `/mine-sessions --dry-run` | Preview what would be mined without filing anything |
+| `/delete-wing <name>` | Permanently delete all drawers in a wing (prompts for confirmation) |
 
 ---
 
@@ -144,7 +145,7 @@ pi-mempalace/
 | `mcp.ts` | Manages one MCP server subprocess per session. Speaks JSON-RPC over stdio. Converts MCP schemas to TypeBox for pi tool registration. |
 | `mine.ts` | Combines session parsing with MCP filing. Replaces the old `pi-mine-sessions` Python script. Files one drawer per session into room `sessions` under the inferred wing. |
 | `diary.ts` | Writes session transcripts to the palace diary on exit, compaction, and periodically. Agent name derived from active model id (`claude-sonnet-4-6` → `claude`), overridable with `PI_MEMPALACE_AGENT_NAME`. |
-| `mempalace.ts` | pi extension entry point — wires lifecycle events (`session_start`, `before_agent_start`, `turn_end`, `session_before_compact`, `session_shutdown`), registers all palace tools, and provides `/mempalace` and `/mine-sessions` commands. |
+| `mempalace.ts` | pi extension entry point — wires lifecycle events (`session_start`, `before_agent_start`, `turn_end`, `session_before_compact`, `session_shutdown`), registers all palace tools, and provides `/mempalace`, `/mine-sessions`, and `/delete-wing` commands. |
 
 ---
 

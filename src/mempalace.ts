@@ -13,7 +13,8 @@
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { McpClient } from "./mcp.js";
+import { execSync } from "node:child_process";
+import { McpClient, findPython } from "./mcp.js";
 import { saveMemories } from "./diary.js";
 import { discoverAndMine, mineSessions, type MineOptions } from "./mine.js";
 
@@ -112,6 +113,51 @@ export default function mempalaceExtension(pi: ExtensionAPI) {
     await saveMemories(ctx, "session end", client);
     client.disconnect();
     client = new McpClient(); // fresh instance ready for next session_start
+  });
+
+  // ── /delete-wing: bulk-delete all drawers in a wing ───────────────────────
+
+  pi.registerCommand("delete-wing", {
+    description: "Delete all drawers in a palace wing (irreversible)",
+    handler: async (args, ctx) => {
+      const wing = args?.trim();
+      if (!wing) {
+        ctx.ui.notify("Usage: /delete-wing <wing-name>", "warning");
+        return;
+      }
+
+      const ok = await ctx.ui.confirm(
+        `Delete wing "${wing}"?`,
+        `This will permanently delete ALL drawers in the "${wing}" wing. This cannot be undone.`,
+      );
+      if (!ok) return;
+
+      ctx.ui.setStatus("mempalace-delete", `Deleting wing "${wing}"…`);
+
+      try {
+        const python = await findPython();
+        const palacePath = process.env.MEMPALACE_PALACE ?? `${process.env.HOME}/.mempalace/palace`;
+        const script = [
+          "import chromadb",
+          `client = chromadb.PersistentClient(path='${palacePath}')`,
+          `col = client.get_collection('mempalace_drawers')`,
+          `col.delete(where={'wing': '${wing}'})`,
+          `print('done')`,
+        ].join("; ");
+
+        const result = execSync(`${python} -c "${script}"`, { encoding: "utf8", timeout: 120_000 });
+        ctx.ui.setStatus("mempalace-delete", "");
+
+        if (result.trim() === "done") {
+          ctx.ui.notify(`Wing "${wing}" deleted from palace`, "success");
+        } else {
+          ctx.ui.notify(`Unexpected output: ${result}`, "warning");
+        }
+      } catch (err: any) {
+        ctx.ui.setStatus("mempalace-delete", "");
+        ctx.ui.notify(`Delete failed: ${err.message}`, "error");
+      }
+    },
   });
 
   // ── /mempalace: live palace status ───────────────────────────────────────

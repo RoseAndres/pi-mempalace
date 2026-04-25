@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 — 2026-04-24
+
+### Added
+- `/delete-wing <name>` — bulk-delete all drawers in a palace wing, with confirmation prompt. Useful for removing large mined datasets that slow cold-start HNSW loads.
+
 ## 0.1.0 — 2026-04-24
 
 Initial release.
