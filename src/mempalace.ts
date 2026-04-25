@@ -9,7 +9,7 @@
  *   before_agent_start  → inject Memory Protocol (mempalace_status) once
  *   turn_end            → periodic diary save every PERIODIC_SAVE_TURNS turns
  *   session_before_compact → rescue memories before context compression
- *   session_shutdown    → final diary write, kill MCP server
+ *   session_shutdown    → final diary write (MCP server stays alive for next session)
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
@@ -20,10 +20,14 @@ import { discoverAndMine, mineSessions, type MineOptions } from "./mine.js";
 
 const PERIODIC_SAVE_TURNS = 15;
 
+// Module-level singleton — survives session_shutdown → session_start cycles
+// within the same pi process, keeping the MCP subprocess (and its loaded
+// HNSW index) warm. Only pays the cold-start cost once per pi launch.
+let _client: McpClient | null = null;
+
 export default function mempalaceExtension(pi: ExtensionAPI) {
-  // One McpClient per session.  Reset to a fresh instance after each shutdown
-  // so the next session_start gets a clean slate.
-  let client = new McpClient();
+  if (!_client) _client = new McpClient();
+  const client = _client;
   let statusInjected = false;
   let turnCount = 0;
 
@@ -111,8 +115,8 @@ export default function mempalaceExtension(pi: ExtensionAPI) {
 
   pi.on("session_shutdown", async (_event, ctx) => {
     await saveMemories(ctx, "session end", client);
-    client.disconnect();
-    client = new McpClient(); // fresh instance ready for next session_start
+    // Intentionally do NOT disconnect — keep the MCP subprocess alive so the
+    // next session_start reuses the warm process (index already in RAM).
   });
 
   // ── /delete-wing: bulk-delete all drawers in a wing ───────────────────────
